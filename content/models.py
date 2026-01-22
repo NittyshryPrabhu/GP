@@ -1,13 +1,14 @@
 from django.db import models
-from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils.text import slugify
 
+
 class Category(models.Model):
     name = models.CharField(max_length=100)
-    
+
     def __str__(self):
         return self.name
+
 
 class Content(models.Model):
     CONTENT_TYPES = [
@@ -16,22 +17,29 @@ class Content(models.Model):
         ('shortfilm', 'Short Film'),
         ('social', 'Social Content'),
     ]
-    
+
     title = models.CharField(max_length=200)
     description = models.TextField()
     content_type = models.CharField(max_length=20, choices=CONTENT_TYPES)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+
     thumbnail = models.ImageField(upload_to='thumbnails/', blank=True, null=True)
-    video_url = models.URLField(blank=True)
-    # optional local uploaded video for development (store in MEDIA_ROOT/videos)
+
+    # YouTube / external video
+    video_url = models.URLField(blank=True, null=True)
+
+    # Local uploaded video
     video_file = models.FileField(upload_to='videos/', blank=True, null=True)
+
     slug = models.SlugField(max_length=250, unique=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     def __str__(self):
         return self.title
 
+    # Auto slug generator
     def save(self, *args, **kwargs):
         if not self.slug:
             base = slugify(self.title)[:200]
@@ -48,43 +56,45 @@ class Content(models.Model):
 
     @property
     def video_src(self):
-        """Return the best available URL for the content's video.
-
-        Order:
-        1. uploaded FileField (MEDIA_URL)
-        2. external video_url (assumed embeddable)
-        3. project-level video folder (BASE_DIR / 'video') matching slug or title filename
-        """
-        # 1. uploaded file
+        # 1️⃣ Local video (highest priority)
         if self.video_file:
             try:
                 return self.video_file.url
-            except Exception:
+            except:
                 pass
 
-        # 2. external URL
+        # 2️⃣ YouTube / external URL
         if self.video_url:
-            return self.video_url
+            url = self.video_url.strip()
 
-        # 3. try project-level video folder (use slug with .mp4)
-        # we avoid importing settings at module import time in case of circular imports
-        from django.conf import settings
-        import os
-        name_candidates = [f"{self.slug}.mp4", f"{self.slug}.webm", f"{self.title}.mp4"]
-        for name in name_candidates:
-            path = os.path.join(settings.BASE_DIR, 'video', name)
-            if os.path.exists(path):
-                # build URL relative to VIDEO_URL
-                return settings.VIDEO_URL + name
+            # youtube watch link
+            if "youtube.com/watch" in url:
+                video_id = url.split("v=")[-1].split("&")[0]
+                return f"https://www.youtube-nocookie.com/embed/{video_id}?rel=0&modestbranding=1"
+
+            # youtu.be short link
+            if "youtu.be/" in url:
+                video_id = url.split("youtu.be/")[-1].split("?")[0]
+                return f"https://www.youtube-nocookie.com/embed/{video_id}?rel=0&modestbranding=1"
+
+            # already embed
+            if "youtube.com/embed/" in url:
+                return url.replace("youtube.com", "youtube-nocookie.com")
+
+            # other platforms (vimeo, cdn, direct mp4)
+            return url
 
         return None
 
 
 class SiteConfig(models.Model):
-    """Simple single-row site configuration for name and logo."""
-    site_name = models.CharField(max_length=100, default='withfamily')
-    logo = models.ImageField(upload_to='site/', blank=True, null=True,
-                             help_text='Logo displayed under navbar on main page')
+    site_name = models.CharField(max_length=100, default='withFamily')
+    logo = models.ImageField(
+        upload_to='site/',
+        blank=True,
+        null=True,
+        help_text='Logo displayed under navbar on main page'
+    )
 
     def __str__(self):
         return f"SiteConfig: {self.site_name}"
