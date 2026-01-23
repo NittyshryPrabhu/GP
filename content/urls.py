@@ -8,4 +8,5 @@ urlpatterns = [
     path('shortfilm/', views.shortfilm_view, name='shortfilm'),
     path('social-content/', views.socialcontent_view, name='socialcontent'),
     path('watch/<slug:slug>/', views.watch_view, name='content_watch'),
+    
 ]
