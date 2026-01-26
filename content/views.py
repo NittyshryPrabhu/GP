@@ -19,9 +19,10 @@ def shortfilm_view(request):
     shortfilms = Content.objects.filter(content_type='shortfilm')
     return render(request, 'content/shortfilm.html', {'shortfilms': shortfilms})
 
-def socialcontent_view(request):
-    social_content = Content.objects.filter(content_type='social')
-    return render(request, 'content/socialcontent.html', {'social_content': social_content})
+def podcast_view(request):
+    podcasts = Content.objects.filter(content_type='podcast')
+    return render(request, 'content/podcast.html', {'podcasts': podcasts})
+
 
 
 @login_required

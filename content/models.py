@@ -15,7 +15,7 @@ class Content(models.Model):
         ('movie', 'Movie'),
         ('webseries', 'Web Series'),
         ('shortfilm', 'Short Film'),
-        ('social', 'Social Content'),
+        ('podcast', 'Podcast'),
     ]
 
     title = models.CharField(max_length=200)

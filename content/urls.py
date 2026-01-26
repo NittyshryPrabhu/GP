@@ -6,7 +6,7 @@ urlpatterns = [
     path('movies/', views.movies_view, name='movies'),
     path('webseries/', views.webseries_view, name='webseries'),
     path('shortfilm/', views.shortfilm_view, name='shortfilm'),
-    path('social-content/', views.socialcontent_view, name='socialcontent'),
+    path('podcasts/', views.podcast_view, name='podcasts'),
     path('watch/<slug:slug>/', views.watch_view, name='content_watch'),
     
 ]
